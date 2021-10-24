@@ -1,42 +1,29 @@
 package ru.atsutsiev.sd.refactoring.servlet;
 
+import ru.atsutsiev.sd.refactoring.database.ProductsTable;
+
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.io.PrintWriter;
+import java.sql.SQLException;
 
 /**
  * @author atsutsiev
  */
 public class GetProductsServlet extends HttpServlet {
+    private final ProductsTable database;
+
+    public GetProductsServlet(final ProductsTable database) { this.database = database; }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        try {
-            try (Connection c = DriverManager.getConnection("jdbc:sqlite:test.db")) {
-                Statement stmt = c.createStatement();
-                ResultSet rs = stmt.executeQuery("SELECT * FROM PRODUCT");
-                response.getWriter().println("<html><body>");
-
-                while (rs.next()) {
-                    String  name = rs.getString("name");
-                    int price  = rs.getInt("price");
-                    response.getWriter().println(name + "\t" + price + "</br>");
-                }
-                response.getWriter().println("</body></html>");
-
-                rs.close();
-                stmt.close();
-            }
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        try (PrintWriter writer = response.getWriter()) {
+            writer.println(database.queryAsHTML("all"));
+        } catch (final SQLException e) {
+            throw new RuntimeException("SQLException: " + e); // I'm sorry for this
         }
-
         response.setContentType("text/html");
         response.setStatus(HttpServletResponse.SC_OK);
     }
