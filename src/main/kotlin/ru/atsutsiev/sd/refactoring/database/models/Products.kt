@@ -1,6 +1,6 @@
-package ru.atsutsiev.sd.refactoring.database
+package ru.atsutsiev.sd.refactoring.database.models
 
-import ru.atsutsiev.sd.refactoring.database.product.Product
+import ru.atsutsiev.sd.refactoring.database.models.custom_fields.ProductDataRecord
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
@@ -11,7 +11,7 @@ import java.util.stream.Collectors.joining
 /**
  * @author atsutsiev
  */
-class ProductsTable(private val databaseURL: String) {
+class Products(private val databaseURL: String) {
     @get:Throws(SQLException::class)
     val connection: Connection
         get() = DriverManager.getConnection(databaseURL)
@@ -23,21 +23,20 @@ class ProductsTable(private val databaseURL: String) {
             "sum"   -> toHTML("Summary price: ", sum())
             "count" -> toHTML("Number of products: ", count())
             "max" -> {
-                val header = "Product with max price: "
-                max().map { p: Product -> toHTML(header, p) }.orElseGet { toHTML(header) }
+                val header = "ProductDataRecord with max price: "
+                max().map { p: ProductDataRecord -> toHTML(header, p) }.orElseGet { toHTML(header) }
             }
             "min" -> {
-                val header = "Product with min price: "
-                min().map { p: Product -> toHTML(header, p) }.orElseGet { toHTML(header) }
+                val header = "ProductDataRecord with min price: "
+                min().map { p: ProductDataRecord -> toHTML(header, p) }.orElseGet { toHTML(header) }
             }
             else -> "Products table: available queries: $AVAILABLE_QUERIES"
         }
     }
 
     @Throws(SQLException::class)
-    fun insert(product: Product): Int {
-        return executeUpdate("INSERT INTO $TABLE_NAME (NAME, PRICE) VALUES (\"${product.name}\",${product.price})")
-    }
+    fun insert(product: ProductDataRecord): Int =
+        executeUpdate("INSERT INTO $TABLE_NAME (NAME, PRICE) VALUES (\"${product.name}\",${product.price})")
 
     @Throws(SQLException::class)
     fun createTable(): Int {
@@ -56,23 +55,19 @@ class ProductsTable(private val databaseURL: String) {
     /* Queries */
     
     @Throws(SQLException::class)
-    fun all(): List<Product> {
-        return parseQueryOutput(executeQuery("SELECT * FROM $TABLE_NAME"))
-    }
+    fun all(): List<ProductDataRecord> = parseQueryOutput(executeQuery("SELECT * FROM $TABLE_NAME"))
 
     @Throws(SQLException::class)
-    fun max(): Optional<Product> {
-        return parseQueryOutput(executeQuery("SELECT * FROM $TABLE_NAME ORDER BY PRICE DESC LIMIT 1"))
+    fun max(): Optional<ProductDataRecord> =
+        parseQueryOutput(executeQuery("SELECT * FROM $TABLE_NAME ORDER BY PRICE DESC LIMIT 1"))
             .stream()
             .findFirst()
-    }
 
     @Throws(SQLException::class)
-    fun min(): Optional<Product> {
-        return parseQueryOutput(executeQuery("SELECT * FROM $TABLE_NAME ORDER BY PRICE LIMIT 1"))
+    fun min(): Optional<ProductDataRecord> =
+        parseQueryOutput(executeQuery("SELECT * FROM $TABLE_NAME ORDER BY PRICE LIMIT 1"))
             .stream()
             .findFirst()
-    }
 
     @Throws(SQLException::class)
     fun sum(): Long = executeQuery("SELECT SUM(price) as sum FROM $TABLE_NAME").getLong("sum")
@@ -88,12 +83,8 @@ class ProductsTable(private val databaseURL: String) {
     private fun executeUpdate(sql: String): Int = connection.createStatement().use { s -> return s.executeUpdate(sql) }
 
     @Throws(SQLException::class)
-    private fun parseQueryOutput(rs: ResultSet): List<Product> {
-        return ArrayList<Product>().apply {
-            while (rs.next()) {
-                add(Product(rs.getString("name"), rs.getInt("price").toLong()))
-            }
-        }
+    private fun parseQueryOutput(rs: ResultSet): List<ProductDataRecord> = ArrayList<ProductDataRecord>().apply {
+        rs.run { while (next()) add(ProductDataRecord(getString("name"), getInt("price").toLong())) }
     }
 
     companion object {
@@ -102,17 +93,15 @@ class ProductsTable(private val databaseURL: String) {
 
         private fun toHTML(header: String): String = "<html><body>\n<h1>$header</h1>\b</body></html>"
 
-        private fun toHTML(header: String, product: Product): String =
+        private fun toHTML(header: String, product: ProductDataRecord): String =
             "<html><body>\n<h1>$header</h1>\n${product.toHTML()}\n</body></html>"
 
         private fun toHTML(header: String, info: Any): String = "<html><body>\n$header\n$info\n</body></html>"
 
-        private fun toHTML(products: List<Product>): String {
-            return """
-                <html><body>
-                ${products.stream().map(Product::toHTML).collect(joining("\n"))}
-                </body></html>
-                """.trimIndent()
-        }
+        private fun toHTML(products: List<ProductDataRecord>): String = """
+            <html><body>
+            ${products.stream().map(ProductDataRecord::toHTML).collect(joining("\n"))}
+            </body></html>
+            """.trimIndent()
     }
 }

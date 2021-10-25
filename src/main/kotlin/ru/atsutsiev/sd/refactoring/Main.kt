@@ -3,7 +3,7 @@ package ru.atsutsiev.sd.refactoring
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.servlet.ServletHolder
-import ru.atsutsiev.sd.refactoring.database.ProductsTable
+import ru.atsutsiev.sd.refactoring.database.models.Products
 import ru.atsutsiev.sd.refactoring.servlet.AddProductServlet
 import ru.atsutsiev.sd.refactoring.servlet.GetProductsServlet
 import ru.atsutsiev.sd.refactoring.servlet.QueryServlet
@@ -15,7 +15,7 @@ object Main {
     @Throws(Exception::class)
     @JvmStatic
     fun main(args: Array<String>) {
-        val products = ProductsTable("jdbc:sqlite:test.db")
+        val products = Products("jdbc:sqlite:test.db")
         products.createTable()
 
         val server = Server(8081)
