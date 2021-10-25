@@ -11,21 +11,10 @@ import javax.servlet.http.HttpServletResponse
 /**
  * @author atsutsiev
  */
-class AddProductServlet(private val model: Products) : HttpServlet() {
-    @Throws(IOException::class)
-    override fun doGet(request: HttpServletRequest, response: HttpServletResponse) {
-        request.apply {
-            try {
-                model.insert(ProductDataRecord(getParameter("name"), getParameter("price").toLong()))
-            } catch (e: SQLException) {
-                throw RuntimeException("SQLException: $e") // I'm sorry for this
-            }
-        }
-
-        response.apply {
-            contentType = "text/html"
-            status = HttpServletResponse.SC_OK
-            writer.println("OK")
-        }
+class AddProductServlet(model: Products) : ProductServlet(model) {
+    @Throws(SQLException::class)
+    override fun doGetInner(request: HttpServletRequest, response: HttpServletResponse) {
+        request.apply { model.insert(ProductDataRecord(getParameter("name"), getParameter("price").toLong())) }
+        response.writer.apply { println("OK") }
     }
 }

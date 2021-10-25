@@ -10,20 +10,9 @@ import javax.servlet.http.HttpServletResponse
 /**
  * @author atsutsiev
  */
-class QueryServlet(private val model: Products) : HttpServlet() {
-    @Throws(IOException::class)
-    override fun doGet(request: HttpServletRequest, response: HttpServletResponse) {
-        response.writer.apply {
-            try {
-                print(model.queryAsHTML(request.getParameter("command")))
-            } catch (e: SQLException) {
-                throw RuntimeException("SQLException: $e") // I'm sorry for this
-            }
-        }
-        
-        response.apply {
-            contentType = "text/html"
-            status = HttpServletResponse.SC_OK
-        }
+class QueryServlet(model: Products) : ProductServlet(model) {
+    @Throws(SQLException::class)
+    override fun doGetInner(request: HttpServletRequest, response: HttpServletResponse) {
+        response.writer.apply { print(model.queryAsHTML(request.getParameter("command"))) }
     }
 }

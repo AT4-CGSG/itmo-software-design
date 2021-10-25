@@ -10,18 +10,9 @@ import javax.servlet.http.HttpServletResponse
 /**
  * @author atsutsiev
  */
-class GetProductsServlet(private val model: Products) : HttpServlet() {
-    @Throws(IOException::class)
-    override fun doGet(request: HttpServletRequest?, response: HttpServletResponse) {
-        try {
-            response.writer.apply { print(model.queryAsHTML("all")) }
-        } catch (e: SQLException) {
-            throw RuntimeException("SQLException: $e") // I'm sorry for this
-        }
-
-        response.apply {
-            contentType = "text/html"
-            status = HttpServletResponse.SC_OK
-        }
+class GetProductsServlet(model: Products) : ProductServlet(model) {
+    @Throws(SQLException::class)
+    override fun doGetInner(request: HttpServletRequest, response: HttpServletResponse) {
+        response.writer.apply { print(model.queryAsHTML("all")) }
     }
 }
