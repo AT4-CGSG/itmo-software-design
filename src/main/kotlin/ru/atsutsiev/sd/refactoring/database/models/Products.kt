@@ -1,10 +1,7 @@
 package ru.atsutsiev.sd.refactoring.database.models
 
 import ru.atsutsiev.sd.refactoring.database.models.custom_fields.ProductDataRecord
-import java.sql.Connection
-import java.sql.DriverManager
-import java.sql.ResultSet
-import java.sql.SQLException
+import java.sql.*
 import java.util.*
 import java.util.stream.Collectors.joining
 
@@ -36,51 +33,49 @@ class Products(private val databaseURL: String) {
 
     @Throws(SQLException::class)
     fun insert(product: ProductDataRecord): Int =
-        executeUpdate("INSERT INTO $TABLE_NAME (NAME, PRICE) VALUES (\"${product.name}\",${product.price})")
+        statement().executeUpdate("INSERT INTO $TABLE_NAME (NAME, PRICE) VALUES (\"${product.name}\",${product.price})")
 
     @Throws(SQLException::class)
-    fun createTable(): Int {
-        DriverManager.getConnection("jdbc:sqlite:test.db").use { c ->
-            c.createStatement().use { s ->
-                return s.executeUpdate(
-                    "CREATE TABLE IF NOT EXISTS PRODUCT" +
-                            "(ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
-                            " NAME           TEXT    NOT NULL, " +
-                            " PRICE          INT     NOT NULL)"
-                )
-            }
-        }
-    }
+    fun create(): Int = statement().executeUpdate(
+        "CREATE TABLE IF NOT EXISTS $TABLE_NAME" +
+            "(ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
+            " NAME           TEXT    NOT NULL, " +
+            " PRICE          INT     NOT NULL)"
+    )
+
+    @Throws(SQLException::class)
+    fun clean(): Int = statement().executeUpdate("DELETE FROM $TABLE_NAME")
 
     /* Queries */
     
     @Throws(SQLException::class)
-    fun all(): List<ProductDataRecord> = parseQueryOutput(executeQuery("SELECT * FROM $TABLE_NAME"))
+    fun all(): List<ProductDataRecord> =
+        parseQueryOutput(statement().executeQuery("SELECT * FROM $TABLE_NAME"))
 
     @Throws(SQLException::class)
     fun max(): Optional<ProductDataRecord> =
-        parseQueryOutput(executeQuery("SELECT * FROM $TABLE_NAME ORDER BY PRICE DESC LIMIT 1"))
+        parseQueryOutput(statement().executeQuery("SELECT * FROM $TABLE_NAME ORDER BY PRICE DESC LIMIT 1"))
             .stream()
             .findFirst()
 
     @Throws(SQLException::class)
     fun min(): Optional<ProductDataRecord> =
-        parseQueryOutput(executeQuery("SELECT * FROM $TABLE_NAME ORDER BY PRICE LIMIT 1"))
+        parseQueryOutput(statement().executeQuery("SELECT * FROM $TABLE_NAME ORDER BY PRICE LIMIT 1"))
             .stream()
             .findFirst()
 
     @Throws(SQLException::class)
-    fun sum(): Long = executeQuery("SELECT SUM(price) as sum FROM $TABLE_NAME").getLong("sum")
+    fun sum(): Long =
+        statement().executeQuery("SELECT SUM(price) as sum FROM $TABLE_NAME").getLong("sum")
 
     @Throws(SQLException::class)
-    fun count(): Int = executeQuery("SELECT COUNT(*) as cnt FROM $TABLE_NAME").getInt("cnt")
+    fun count(): Int =
+        statement().executeQuery("SELECT COUNT(*) as cnt FROM $TABLE_NAME").getInt("cnt")
 
     /* Internals */
-    @Throws(SQLException::class)
-    private fun executeQuery(sql: String): ResultSet = connection.createStatement().use { s -> return s.executeQuery(sql) }
 
     @Throws(SQLException::class)
-    private fun executeUpdate(sql: String): Int = connection.createStatement().use { s -> return s.executeUpdate(sql) }
+    private fun statement(): Statement = connection.createStatement()
 
     @Throws(SQLException::class)
     private fun parseQueryOutput(rs: ResultSet): List<ProductDataRecord> = ArrayList<ProductDataRecord>().apply {
