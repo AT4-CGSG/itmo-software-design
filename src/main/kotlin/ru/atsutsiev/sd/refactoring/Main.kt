@@ -16,7 +16,7 @@ object Main {
     @JvmStatic
     fun main(args: Array<String>) {
         val products = Products("jdbc:sqlite:test.db")
-        products.createTable()
+        products.create()
 
         val server = Server(8081)
 
