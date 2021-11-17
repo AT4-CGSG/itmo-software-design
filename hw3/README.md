@@ -1,0 +1,1 @@
+This is a web-server application for managing warehouse database, which can store data about present products and their prices.
