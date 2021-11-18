@@ -6,9 +6,9 @@ import java.util.*
  * @author atsutsiev
  */
 class ProductDataRecord(val name: String, val price: Long) {
-    fun toHTML(): String = "$name\t$price</br>"
+    fun toHTML(): String = "<br>$name\t$price</br>"
 
-    override fun toString(): String = "Product {  name: $name price: $price}"
+    override fun toString(): String = "Product { name: $name price: $price }"
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

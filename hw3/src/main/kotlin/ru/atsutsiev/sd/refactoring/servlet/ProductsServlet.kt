@@ -7,12 +7,15 @@ import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-abstract class ProductServlet(@Suppress("unused") protected val model: Products) : HttpServlet() {
+/**
+ * @author atsutsiev
+ */
+abstract class ProductsServlet(@Suppress("unused") protected val model: Products) : HttpServlet() {
     @Throws(SQLException::class)
     protected abstract fun doGetInner(request: HttpServletRequest, response: HttpServletResponse)
 
     @Throws(IOException::class)
-    override fun doGet(request: HttpServletRequest, response: HttpServletResponse) {
+    public override fun doGet(request: HttpServletRequest, response: HttpServletResponse) {
         try { doGetInner(request, response) }
         catch (e: SQLException) { throw RuntimeException("SQLException: $e") } // I'm sorry for this
 

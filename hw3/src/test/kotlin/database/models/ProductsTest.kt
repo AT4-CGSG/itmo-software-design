@@ -1,14 +1,16 @@
 package database.models
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.AfterClass
-import org.junit.BeforeClass
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import ru.atsutsiev.sd.refactoring.database.models.Products
 import ru.atsutsiev.sd.refactoring.database.models.custom_fields.ProductDataRecord
 import java.sql.SQLException
-import java.util.*
 
+/**
+ * @author atsutsuiev
+ */
 class ProductsTest {
     companion object {
         private var productsList = listOf(
@@ -19,15 +21,27 @@ class ProductsTest {
             ProductDataRecord("deshmanskaya_miska", 10),
         )
 
-        private var productsModel = Products("jdbc:sqlite:test.db").apply {
-            create()
-            productsList.forEach(this::insert)
-        }
+        private var productsModel = Products().apply { create() }
 
-        @BeforeClass
-        @AfterClass
-        @Throws(Exception::class)
-        fun cleanUp() { productsModel.clean() }
+    }
+
+    @Before
+    fun fillModel() { productsModel.apply { clean(); productsList.forEach(this::insert) } }
+
+    @After
+    @Throws(Exception::class)
+    fun cleanUp() { productsModel.clean() }
+
+    @Test
+    @Throws(SQLException::class)
+    fun testGetAll() {
+        assertThat(productsModel.all()).containsExactlyInAnyOrder(
+            productsList[0],
+            productsList[1],
+            productsList[2],
+            productsList[3],
+            productsList[4],
+        )
     }
 
     @Test
@@ -47,24 +61,15 @@ class ProductsTest {
             assertThat(get()).isEqualTo(ProductDataRecord("lozhka", 1))
         }
     }
-
     @Test
     @Throws(SQLException::class)
-    fun testAll() {
-        assertThat(productsModel.all()).containsExactlyInAnyOrder(
-            productsList[0],
-            productsList[1],
-            productsList[2],
-            productsList[3],
-            productsList[4],
-        )
+    fun testCount() {
+        assertThat(productsModel.count()).isEqualTo(5)
     }
 
     @Test
     @Throws(SQLException::class)
-    fun testCount() { assertThat(productsModel.count()).isEqualTo(5) }
-
-    @Test
-    @Throws(SQLException::class)
-    fun testSum() { assertThat(productsModel.sum()).isEqualTo(267) }
+    fun testSum() {
+        assertThat(productsModel.sum()).isEqualTo(267)
+    }
 }
