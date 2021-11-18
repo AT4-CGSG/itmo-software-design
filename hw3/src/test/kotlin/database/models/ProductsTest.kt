@@ -1,7 +1,9 @@
 package database.models
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.*
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
 import ru.atsutsiev.sd.refactoring.database.models.Products
 import ru.atsutsiev.sd.refactoring.database.models.custom_fields.ProductDataRecord
 import java.sql.SQLException
@@ -32,6 +34,18 @@ class ProductsTest {
 
     @Test
     @Throws(SQLException::class)
+    fun testGetAll() {
+        assertThat(productsModel.all()).containsExactlyInAnyOrder(
+            productsList[0],
+            productsList[1],
+            productsList[2],
+            productsList[3],
+            productsList[4],
+        )
+    }
+
+    @Test
+    @Throws(SQLException::class)
     fun testMax() {
         productsModel.max().apply {
             assertThat(isPresent)
@@ -47,21 +61,6 @@ class ProductsTest {
             assertThat(get()).isEqualTo(ProductDataRecord("lozhka", 1))
         }
     }
-
-    @Test
-    @Throws(SQLException::class)
-    fun testAll() {
-        var a = 10
-
-        assertThat(productsModel.all()).containsExactlyInAnyOrder(
-            productsList[0],
-            productsList[1],
-            productsList[2],
-            productsList[3],
-            productsList[4],
-        )
-    }
-
     @Test
     @Throws(SQLException::class)
     fun testCount() {

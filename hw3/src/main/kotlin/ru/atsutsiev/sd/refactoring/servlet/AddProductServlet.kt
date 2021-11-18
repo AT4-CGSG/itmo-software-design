@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletResponse
 /**
  * @author atsutsiev
  */
-class AddProductServlet(model: Products) : ProductServlet(model) {
+class AddProductServlet(model: Products) : ProductsServlet(model) {
     @Throws(SQLException::class)
     override fun doGetInner(request: HttpServletRequest, response: HttpServletResponse) {
         request.apply { model.insert(ProductDataRecord(getParameter("name"), getParameter("price").toLong())) }

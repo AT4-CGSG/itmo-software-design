@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletResponse
 /**
  * @author atsutsiev
  */
-class GetProductsServlet(model: Products) : ProductServlet(model) {
+class GetProductsServlet(model: Products) : ProductsServlet(model) {
     @Throws(SQLException::class)
     override fun doGetInner(request: HttpServletRequest, response: HttpServletResponse) {
         response.writer.apply { print(model.queryAsHTML("all")) }

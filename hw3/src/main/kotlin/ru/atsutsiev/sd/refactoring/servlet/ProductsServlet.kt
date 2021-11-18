@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletResponse
 /**
  * @author atsutsiev
  */
-abstract class ProductServlet(@Suppress("unused") protected val model: Products) : HttpServlet() {
+abstract class ProductsServlet(@Suppress("unused") protected val model: Products) : HttpServlet() {
     @Throws(SQLException::class)
     protected abstract fun doGetInner(request: HttpServletRequest, response: HttpServletResponse)
 

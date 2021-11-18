@@ -5,30 +5,23 @@ import java.sql.*
 import java.util.*
 import java.util.stream.Collectors.joining
 
-
 /**
  * @author atsutsiev
  */
 open class Products {
-    private val databaseURL: String = "jdbc:sqlite:test.db"
-
-    @get:Throws(SQLException::class)
-    val connection: Connection
-        get() = DriverManager.getConnection(databaseURL)
-
     @Throws(IllegalArgumentException::class, SQLException::class)
     fun queryAsHTML(queryCommand: String?): String {
         return when (queryCommand) {
             "all"   -> toHTML(all())
-            "sum"   -> toHTML("Summary price: ", sum())
-            "count" -> toHTML("Number of products: ", count())
+            "sum"   -> toHTML("Summary price:", sum())
+            "count" -> toHTML("Amount of products:", count())
             "max" -> {
-                val header = "ProductDataRecord with max price: "
-                max().map { p: ProductDataRecord -> toHTML(header, p) }.orElseGet { toHTML(header) }
+                max().map { p: ProductDataRecord -> toHTML("The most expensive product:", p) }
+                    .orElseGet { toHTML("No products") }
             }
             "min" -> {
-                val header = "ProductDataRecord with min price: "
-                min().map { p: ProductDataRecord -> toHTML(header, p) }.orElseGet { toHTML(header) }
+                min().map { p: ProductDataRecord -> toHTML("The least expensive product:", p) }
+                    .orElseGet { toHTML("No products") }
             }
             else -> "Products table: available queries: $AVAILABLE_QUERIES"
         }
@@ -57,63 +50,69 @@ open class Products {
     /* Queries */
     
     @Throws(SQLException::class)
-    fun all(): List<ProductDataRecord> {
+    open fun all(): List<ProductDataRecord> {
         statement().use { return@all parseQueryOutput(it.executeQuery("SELECT * FROM $TABLE_NAME")) }
     }
 
     @Throws(SQLException::class)
-    fun max(): Optional<ProductDataRecord> {
+    open fun max(): Optional<ProductDataRecord> {
         statement().use {
             return@max parseQueryOutput(it.executeQuery("SELECT * FROM $TABLE_NAME ORDER BY PRICE DESC LIMIT 1")).stream().findFirst()
         }
     }
 
     @Throws(SQLException::class)
-    fun min(): Optional<ProductDataRecord> {
+    open fun min(): Optional<ProductDataRecord> {
         statement().use {
             return@min parseQueryOutput(it.executeQuery("SELECT * FROM $TABLE_NAME ORDER BY PRICE LIMIT 1")).stream().findFirst()
         }
     }
 
     @Throws(SQLException::class)
-    fun sum(): Long {
+    open fun sum(): Long {
         statement().use {
-            return@sum it.executeQuery("SELECT SUM(price) as sum FROM $TABLE_NAME").getLong("sum")
+            return@sum it.executeQuery("SELECT SUM(PRICE) as sum FROM $TABLE_NAME").getLong("sum")
         }
     }
 
     @Throws(SQLException::class)
-    fun count(): Int {
+    open fun count(): Int {
         statement().use {
             return@count it.executeQuery("SELECT COUNT(*) as cnt FROM $TABLE_NAME").getInt("cnt")
         }
-    }
-
-    /* Internals */
-
-    @Throws(SQLException::class)
-    private fun statement(): Statement = connection.createStatement()
-
-    @Throws(SQLException::class)
-    private fun parseQueryOutput(rs: ResultSet): List<ProductDataRecord> = ArrayList<ProductDataRecord>().apply {
-        rs.run { while (next()) add(ProductDataRecord(getString("name"), getInt("price").toLong())) }
     }
 
     companion object {
         private const val TABLE_NAME = "PRODUCT"
         private const val AVAILABLE_QUERIES = "max, min, sum, count, all"
 
-        private fun toHTML(header: String): String = "<html><body>\n<h1>$header</h1>\b</body></html>"
+        private const val databaseURL = "jdbc:sqlite:test.db"
+
+        @Throws(SQLException::class)
+        private fun statement(): Statement = connection.createStatement()
+
+        @get:Throws(SQLException::class)
+        val connection: Connection
+            get() = DriverManager.getConnection(databaseURL)
+
+        @Throws(SQLException::class)
+        private fun parseQueryOutput(rs: ResultSet): List<ProductDataRecord> = ArrayList<ProductDataRecord>().apply {
+            rs.run { while (next()) add(ProductDataRecord(getString("name"), getInt("price").toLong())) }
+        }
+
+        @Suppress("SameParameterValue")
+        private fun toHTML(header: String): String =
+            "<html><body>\n<h1>$header</h1>\b</body></html>"
 
         private fun toHTML(header: String, product: ProductDataRecord): String =
             "<html><body>\n<h1>$header</h1>\n${product.toHTML()}\n</body></html>"
 
-        private fun toHTML(header: String, info: Any): String = "<html><body>\n$header\n$info\n</body></html>"
+        private fun toHTML(header: String, info: Any): String =
+            "<html><body>\n<h1>$header\n</h1><br>$info\n</br></body></html>"
 
-        private fun toHTML(products: List<ProductDataRecord>): String = """
-            <html><body>
-            ${products.stream().map(ProductDataRecord::toHTML).collect(joining("\n"))}
-            </body></html>
-            """.trimIndent()
+        private fun toHTML(products: List<ProductDataRecord>): String =
+            "<html><body>" +
+            products.stream().map(ProductDataRecord::toHTML).collect(joining("\n")) +
+            "</body></html>"
     }
 }
