@@ -2,8 +2,8 @@
 Получить практический опыт применения техник рефакторинга.
 
 ### Задание
-Скачайте [приложение](https://github.com/akirakozov/software-design/tree/master/java/refactoring);
-Приложение представляет собой простой web-server, который хранит информацию о товарах и их цене.
+Скачайте [приложение](https://github.com/akirakozov/software-design/tree/master/java/refactoring).
+Оно представляет собой простой web-server, который хранит информацию о товарах и их цене.
 Поддержаны такие методы:
 * ```http://localhost:8081/get-products``` -- посмотреть все товары в базе;
 * ```http://localhost:8081/add-product?name=iphone6&price=300``` -- добавить новый товар;
